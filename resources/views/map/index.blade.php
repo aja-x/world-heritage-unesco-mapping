@@ -17,7 +17,7 @@
     <link href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" rel="stylesheet" crossorigin="">
 </head>
 <body>
-<div class="spinner-border text-primary position-absolute" role="status" id="spinner">
+<div class="spinner-border text-primary position-absolute" style="z-index: 9999" role="status" id="spinner">
     <span class="visually-hidden">Loading...</span>
 </div>
 <div aria-live="polite" aria-atomic="true" class="position-relative">
