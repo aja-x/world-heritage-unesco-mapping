@@ -15,6 +15,19 @@
             crossorigin=""></script>
     <link href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" rel="stylesheet" crossorigin="">
     <link href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" rel="stylesheet" crossorigin="">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-search/2.9.9/leaflet-search.min.css" integrity="sha512-8zuX58lcEgyZdtfTu5Iu9SDfadAirBVoZrJkmuZJ+/s80QZ/YTNVlEqPtE9iHqNXeCgd122pl+inU1Oxn9KXng==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        .search-button {
+            background: url({{ asset('assets/img/search.svg') }}) no-repeat 4px 4px #fff !important;
+        }
+        {{--.search-button:hover {--}}
+        {{--    background: url({{ asset('assets/img/search.svg') }}) no-repeat 4px -20px #fafafa !important;;--}}
+        {{--}--}}
+        .search-cancel {
+            background: url({{ asset('assets/img/search.svg') }}) no-repeat 0 -46px !important;;
+        }
+    </style>
 </head>
 <body>
 <div class="spinner-border text-primary position-absolute" style="z-index: 9999" role="status" id="spinner">
@@ -54,6 +67,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin="" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-search/2.9.9/leaflet-search.min.js" integrity="sha512-lVfVkVDAJcuOZemuK6qheoesoZfB0FRoV5J5FvIsYuIq7aQL+Cj8+8tFZuAX6mvUGO8BODqg5LBzDqvtX15c6A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
     let dangerToast = new bootstrap.Toast(document.getElementById('dangerToast'));
@@ -74,12 +88,30 @@
     $.ajax({
         url: '{{ route('api.world-heritage-list') }}',
     }).done(function (data) {
-        L.geoJSON(data, {
+        let featuresLayer = L.geoJSON(data, {
             onEachFeature: onEachFeature,
-        }).addTo(map);
+        });
+        featuresLayer.addTo(map);
+
         map.setView([-7.275607639638848, 112.79378788381416], 8);
-        let markers = L.markerClusterGroup();
-        map.addLayer(markers);
+        var searchControl = new L.Control.Search({
+            layer: featuresLayer,
+            propertyName: 'name_en',
+            marker: false,
+            moveToLocation: function(latlng, title, map) {
+                map.flyTo([latlng.lat + 1, latlng.lng], 8);
+            }
+        });
+
+        searchControl.on('search:locationfound', function(e) {
+            if(e.layer._popup)
+                e.layer.openPopup();
+        }).on('search:collapsed', function(e) {
+            featuresLayer.eachLayer(function(layer) {
+                featuresLayer.resetStyle(layer);
+            });
+        });
+        map.addControl(searchControl);
         successToast.show();
     }).fail(function (data) {
         dangerToast.show();
@@ -95,18 +127,24 @@
                 ${feature.properties.name_en}</br>
                 <div class="fw-bolder text-uppercase mt-2">Short Description</div>
                 ${feature.properties.short_description_en}</br>
-                <div class="fw-bolder text-uppercase mt-2">Longitude</div>
-                ${feature.properties.latitude}</br>
-                <div class="fw-bolder text-uppercase mt-2">Latitude</div>
-                ${feature.properties.longitude}</br>
-                <div class="fw-bolder text-uppercase mt-2">Area hectares</div>
-                ${feature.properties.area_hectares}</br>
-                <div class="fw-bolder text-uppercase mt-2">Category</div>
-                ${feature.properties.category}</br>
-                <div class="fw-bolder text-uppercase mt-2">Country</div>
-                ${feature.properties.country_en}</br>
-                <div class="fw-bolder text-uppercase mt-2">Continent</div>
-                ${feature.properties.continent_en}</br>
+                <div class="row m-0">
+                    <div class="col-6 p-0">
+                        <div class="fw-bolder text-uppercase mt-2">Longitude</div>
+                        ${feature.properties.latitude}</br>
+                        <div class="fw-bolder text-uppercase mt-2">Latitude</div>
+                        ${feature.properties.longitude}</br>
+                        <div class="fw-bolder text-uppercase mt-2">Area hectares</div>
+                        ${feature.properties.area_hectares}</br>
+                    </div>
+                    <div class="col-6 p-0">
+                        <div class="fw-bolder text-uppercase mt-2">Category</div>
+                        ${feature.properties.category}</br>
+                        <div class="fw-bolder text-uppercase mt-2">Country</div>
+                        ${feature.properties.country_en}</br>
+                        <div class="fw-bolder text-uppercase mt-2">Continent</div>
+                        ${feature.properties.continent_en}</br>
+                    </div>
+                </div>
             `;
             layer.bindPopup(template);
         }
