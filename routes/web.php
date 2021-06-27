@@ -15,3 +15,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [MapController::class, 'index'])->name('root');
+Route::get('/new', function () {
+    return view('map.new-ui');
+});
