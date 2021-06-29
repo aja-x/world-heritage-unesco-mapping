@@ -45,6 +45,7 @@
             </a>
             <h4 class="fw-bolder mb-0 text-muted">
                 World Heritage UNESCO Map
+                <span class="badge bg-primary fw-bolder mx-2" id="worldHeritageCount"></span>
             </h4>
         </nav>
         @yield('content')

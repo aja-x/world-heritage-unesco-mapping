@@ -44,11 +44,31 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between">
                                 <h5 class="card-title mb-0">World Heritage List by County</h5>
-                                <span class="badge bg-primary fw-bolder" id="worldHeritageCount"></span>
+                                <span class="badge bg-primary fw-bolder" id="countryCount"></span>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="accordion" id="worldHeritageListAccordion" style="max-height: 70vh; overflow-y: scroll;">
+                            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="pills-country-tab" data-bs-toggle="pill" data-bs-target="#pills-country" type="button" role="tab" aria-controls="pills-country" aria-selected="true">Country</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="pills-category-tab" data-bs-toggle="pill" data-bs-target="#pills-category" type="button" role="tab" aria-controls="pills-category" aria-selected="false">Category</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="pills-continent-tab" data-bs-toggle="pill" data-bs-target="#pills-continent" type="button" role="tab" aria-controls="pills-continent" aria-selected="false">Continent</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="pills-tabContent">
+                                <div class="tab-pane fade show active" id="pills-country" role="tabpanel" aria-labelledby="pills-country-tab">
+                                    <div class="accordion" id="worldHeritageListAccordion" style="max-height: 70vh; overflow-y: scroll;"></div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-category" role="tabpanel" aria-labelledby="pills-category-tab">
+                                    <div class="accordion" id="categoryListAccordion" style="max-height: 70vh; overflow-y: scroll;"></div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-continent" role="tabpanel" aria-labelledby="pills-continent-tab">
+                                    <div class="accordion" id="continentListAccordion" style="max-height: 70vh; overflow-y: scroll;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -81,14 +101,13 @@
         $.ajax({
             url: '{{ route('api.world-heritage-list') }}',
         }).done(function (data) {
-            initAccordion(data);
             let featuresLayer = L.geoJSON(data, {
                 onEachFeature: onEachFeature,
             });
             featuresLayer.addTo(map);
 
             map.setView([-7.275607639638848, 112.79378788381416], 8);
-            var searchControl = new L.Control.Search({
+            let searchControl = new L.Control.Search({
                 layer: featuresLayer,
                 propertyName: 'name_en',
                 marker: false,
@@ -108,6 +127,7 @@
             map.addControl(searchControl);
             document.getElementById('worldHeritageCount').innerHTML = data.features.length + ' data';
             initAccordion(data);
+            console.log(data);
 
             successToast.show();
         }).fail(function (data) {
@@ -147,7 +167,29 @@
             }
         }
 
+        let template = `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="{HEADER_ID}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{COLLAPSE_ID}" aria-expanded="false" aria-controls="{COLLAPSE_ID}">
+                    </button>
+                </h2>
+                <div id="{COLLAPSE_ID}" class="accordion-collapse collapsed collapse" aria-labelledby="{HEADER_ID}" data-bs-parent="#worldHeritageListAccordion">
+                    <div class="accordion-body">
+                    </div>
+                </div>
+            </div>
+        `;
+
+        let buttonTemplate = `
+            <button type="button" class="btn btn-light col-12 text-start mb-1"></button>
+        `;
+
         function initAccordion(data) {
+            initCountryAccordion(data);
+            initCategoryAccordion(data);
+        }
+
+        function initCountryAccordion(data) {
             let countries = {};
 
             for (let i = 0; i < data.features.length; i++) {
@@ -160,21 +202,7 @@
                 }
             }
 
-            let template = `
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="{HEADER_ID}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{COLLAPSE_ID}" aria-expanded="false" aria-controls="{COLLAPSE_ID}">
-                        </button>
-                    </h2>
-                    <div id="{COLLAPSE_ID}" class="accordion-collapse collapsed collapse" aria-labelledby="{HEADER_ID}" data-bs-parent="#worldHeritageListAccordion">
-                        <div class="accordion-body">
-                        </div>
-                    </div>
-                </div>
-            `;
-            let buttonTemplate = `
-                <button type="button" class="btn btn-light col-12 text-start mb-1"></button>
-            `;
+            document.getElementById('countryCount').innerHTML = Object.keys(countries).length + ' Countries';
 
             let worldHeritageListAccordion = document.getElementById('worldHeritageListAccordion');
             const countriesKeys = Object.keys(countries).sort();
@@ -196,6 +224,44 @@
                 }
 
                 worldHeritageListAccordion.appendChild(countryAccordion);
+            }
+        }
+
+        function initCategoryAccordion(data) {
+            let categories = {};
+
+            for (let i = 0; i < data.features.length; i++) {
+                let categoryName = data.features[i].properties.category;
+                if (categories[categoryName] !== undefined) {
+                    categories[categoryName].push(data.features[i]);
+                } else {
+                    categories[categoryName] = [];
+                    categories[categoryName].push(data.features[i]);
+                }
+            }
+            console.log(categories);
+
+
+            let categoryListAccordion = document.getElementById('categoryListAccordion');
+            const categoriesKeys = Object.keys(categories).sort();
+            for (let i = 0; i < categoriesKeys.length; i++) {
+                let countryAccordion = createElementFromTemplate(template
+                    .replaceAll('{HEADER_ID}', 'categoryKey_' + i)
+                    .replaceAll('{COLLAPSE_ID}', 'categoryCollapse_' + i));
+
+                let accordionBody = countryAccordion.querySelector('#categoryCollapse_' + i + ' .accordion-body');
+                countryAccordion.querySelector("#categoryKey_" + i + " button").innerHTML = categoriesKeys[i];
+
+                for (let j = 0; j < categories[categoriesKeys[i]].length; j++) {
+                    let button = createElementFromTemplate(buttonTemplate);
+                    button.innerHTML = categories[categoriesKeys[i]][j].properties.name_en;
+                    button.addEventListener('click', function () {
+                        map.flyTo([categories[categoriesKeys[i]][j].properties.latitude + 0.5, categories[categoriesKeys[i]][j].properties.longitude], 8);
+                    });
+                    accordionBody.appendChild(button);
+                }
+
+                categoryListAccordion.appendChild(countryAccordion);
             }
         }
 
