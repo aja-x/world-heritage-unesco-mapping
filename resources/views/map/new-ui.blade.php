@@ -9,6 +9,7 @@
     <link href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" rel="stylesheet" crossorigin="">
     <link href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" rel="stylesheet" crossorigin="">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-search/2.9.9/leaflet-search.min.css" integrity="sha512-8zuX58lcEgyZdtfTu5Iu9SDfadAirBVoZrJkmuZJ+/s80QZ/YTNVlEqPtE9iHqNXeCgd122pl+inU1Oxn9KXng==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.1/css/OverlayScrollbars.min.css" integrity="sha512-jN4O0AUkRmE6Jwc8la2I5iBmS+tCDcfUd1eq8nrZIBnDKTmCp5YxxNN1/aetnAH32qT+dDbk1aGhhoaw5cJNlw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <style>
         .search-button {
@@ -43,11 +44,11 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex justify-content-between">
-                                <h5 class="card-title mb-0">World Heritage List by County</h5>
+                                <h5 class="card-title mb-0">World Heritage List by Field</h5>
                                 <span class="badge bg-primary fw-bolder" id="countryCount"></span>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body pt-2">
                             <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link active" id="pills-country-tab" data-bs-toggle="pill" data-bs-target="#pills-country" type="button" role="tab" aria-controls="pills-country" aria-selected="true">Country</button>
@@ -61,13 +62,13 @@
                             </ul>
                             <div class="tab-content" id="pills-tabContent">
                                 <div class="tab-pane fade show active" id="pills-country" role="tabpanel" aria-labelledby="pills-country-tab">
-                                    <div class="accordion" id="worldHeritageListAccordion" style="max-height: 70vh; overflow-y: scroll;"></div>
+                                    <div class="accordion" id="worldHeritageListAccordion" style="max-height: 65vh; overflow-y: scroll;"></div>
                                 </div>
                                 <div class="tab-pane fade" id="pills-category" role="tabpanel" aria-labelledby="pills-category-tab">
-                                    <div class="accordion" id="categoryListAccordion" style="max-height: 70vh; overflow-y: scroll;"></div>
+                                    <div class="accordion" id="categoryListAccordion" style="max-height: 65vh; overflow-y: scroll;"></div>
                                 </div>
                                 <div class="tab-pane fade" id="pills-continent" role="tabpanel" aria-labelledby="pills-continent-tab">
-                                    <div class="accordion" id="continentListAccordion" style="max-height: 70vh; overflow-y: scroll;"></div>
+                                    <div class="accordion" id="continentListAccordion" style="max-height: 65vh; overflow-y: scroll;"></div>
                                 </div>
                             </div>
                         </div>
@@ -81,6 +82,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin="" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-search/2.9.9/leaflet-search.min.js" integrity="sha512-lVfVkVDAJcuOZemuK6qheoesoZfB0FRoV5J5FvIsYuIq7aQL+Cj8+8tFZuAX6mvUGO8BODqg5LBzDqvtX15c6A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.1/js/OverlayScrollbars.min.js" integrity="sha512-B1xv1CqZlvaOobTbSiJWbRO2iM0iii3wQ/LWnXWJJxKfvIRRJa910sVmyZeOrvI854sLDsFCuFHh4urASj+qgw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
         let dangerToast = new bootstrap.Toast(document.getElementById('dangerToast'));
@@ -127,6 +129,7 @@
             map.addControl(searchControl);
             document.getElementById('worldHeritageCount').innerHTML = data.features.length + ' data';
             initAccordion(data);
+            initScrollbars();
             console.log(data);
 
             successToast.show();
@@ -167,6 +170,18 @@
             }
         }
 
+        function initScrollbars() {
+            OverlayScrollbars(document.getElementById('worldHeritageListAccordion'), {
+                className: "os-theme-dark",
+            });
+            OverlayScrollbars(document.getElementById('categoryListAccordion'), {
+                className: "os-theme-dark",
+            });
+            OverlayScrollbars(document.getElementById('continentListAccordion'), {
+                className: "os-theme-dark",
+            });
+        }
+
         let template = `
             <div class="accordion-item">
                 <h2 class="accordion-header" id="{HEADER_ID}">
@@ -187,6 +202,7 @@
         function initAccordion(data) {
             initCountryAccordion(data);
             initCategoryAccordion(data);
+            initContinentAccordion(data);
         }
 
         function initCountryAccordion(data) {
@@ -202,7 +218,7 @@
                 }
             }
 
-            document.getElementById('countryCount').innerHTML = Object.keys(countries).length + ' Countries';
+            document.getElementById('pills-country-tab').innerHTML = `Country <span class="badge bg-success">${Object.keys(countries).length} data</span>`;
 
             let worldHeritageListAccordion = document.getElementById('worldHeritageListAccordion');
             const countriesKeys = Object.keys(countries).sort();
@@ -212,13 +228,15 @@
                     .replaceAll('{COLLAPSE_ID}', 'collapse_' + i));
 
                 let accordionBody = countryAccordion.querySelector('#collapse_' + i + ' .accordion-body');
-                countryAccordion.querySelector("#key_" + i + " button").innerHTML = countriesKeys[i];
+                countryAccordion.querySelector("#key_" + i + " button").innerHTML = `${countriesKeys[i]} <span class="badge bg-light mx-2 text-black-50">${countries[countriesKeys[i]].length} data</span>`;
 
+                let country = countries[countriesKeys[i]].sort();
+                console.log(country);
                 for (let j = 0; j < countries[countriesKeys[i]].length; j++) {
                     let button = createElementFromTemplate(buttonTemplate);
-                    button.innerHTML = countries[countriesKeys[i]][j].properties.name_en;
+                    button.innerHTML = country[j].properties.name_en;
                     button.addEventListener('click', function () {
-                        map.flyTo([countries[countriesKeys[i]][j].properties.latitude + 0.5, countries[countriesKeys[i]][j].properties.longitude], 8);
+                        map.flyTo([country[j].properties.latitude + 0.5, country[j].properties.longitude], 8);
                     });
                     accordionBody.appendChild(button);
                 }
@@ -239,8 +257,7 @@
                     categories[categoryName].push(data.features[i]);
                 }
             }
-            console.log(categories);
-
+            document.getElementById('pills-category-tab').innerHTML = `Category <span class="badge bg-success">${Object.keys(categories).length} data</span>`;
 
             let categoryListAccordion = document.getElementById('categoryListAccordion');
             const categoriesKeys = Object.keys(categories).sort();
@@ -250,7 +267,7 @@
                     .replaceAll('{COLLAPSE_ID}', 'categoryCollapse_' + i));
 
                 let accordionBody = countryAccordion.querySelector('#categoryCollapse_' + i + ' .accordion-body');
-                countryAccordion.querySelector("#categoryKey_" + i + " button").innerHTML = categoriesKeys[i];
+                countryAccordion.querySelector("#categoryKey_" + i + " button").innerHTML = `${categoriesKeys[i]} <span class="badge bg-light mx-2 text-black-50">${categories[categoriesKeys[i]].length} data</span>`;
 
                 for (let j = 0; j < categories[categoriesKeys[i]].length; j++) {
                     let button = createElementFromTemplate(buttonTemplate);
@@ -265,11 +282,52 @@
             }
         }
 
+        function initContinentAccordion(data) {
+            let continents = {};
+
+            for (let i = 0; i < data.features.length; i++) {
+                let categoryName = data.features[i].properties.continent_en;
+                if (continents[categoryName] !== undefined) {
+                    continents[categoryName].push(data.features[i]);
+                } else {
+                    continents[categoryName] = [];
+                    continents[categoryName].push(data.features[i]);
+                }
+            }
+            document.getElementById('pills-continent-tab').innerHTML = `Continent <span class="badge bg-success">${Object.keys(continents).length} data</span>`;
+
+            let continentListAccordion = document.getElementById('continentListAccordion');
+            const continentsKeys = Object.keys(continents).sort();
+            for (let i = 0; i < continentsKeys.length; i++) {
+                let continentAccordion = createElementFromTemplate(template
+                    .replaceAll('{HEADER_ID}', 'continentKey_' + i)
+                    .replaceAll('{COLLAPSE_ID}', 'continentCollapse_' + i));
+
+                let accordionBody = continentAccordion.querySelector('#continentCollapse_' + i + ' .accordion-body');
+                continentAccordion.querySelector("#continentKey_" + i + " button").innerHTML = `${continentsKeys[i]} <span class="badge bg-light mx-2 text-black-50">${continents[continentsKeys[i]].length} data</span>`;
+
+                for (let j = 0; j < continents[continentsKeys[i]].length; j++) {
+                    let button = createElementFromTemplate(buttonTemplate);
+                    button.innerHTML = continents[continentsKeys[i]][j].properties.name_en;
+                    button.addEventListener('click', function () {
+                        map.flyTo([continents[continentsKeys[i]][j].properties.latitude + 0.5, continents[continentsKeys[i]][j].properties.longitude], 8);
+                    });
+                    accordionBody.appendChild(button);
+                }
+
+                continentListAccordion.appendChild(continentAccordion);
+            }
+        }
+
         function createElementFromTemplate(template) {
             let div = document.createElement('div');
             div.innerHTML = template;
 
             return div.firstElementChild;
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            OverlayScrollbars(document.querySelectorAll('body'), { });
+        });
     </script>
 @endsection
